@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: SLAP - Saco por restaurante
+ * Plugin Name: SLAP - Sacos e Embalagens
  * Plugin URI: https://slap.pt
- * Description: A WordPress plugin for managing bags per restaurant category.
+ * Description: SLAP - Gestão de sacos e embalagens por restaurante e produto.
  * Version: 1.0.0
  * Author: Pedro Simão
  * Author URI: https://slap.pt
@@ -62,25 +62,4 @@ function run_slap_bag_per_category() {
 
 run_slap_bag_per_category();
 
-/**
- * Initialize the fee manager after all plugins are loaded.
- * This ensures WooCommerce is available.
- */
-add_action( 'plugins_loaded', function() {
-    // Double-check and initialize fee manager if needed
-    if ( ! class_exists( 'SLAP_Bag_Fee_Manager' ) ) {
-        if ( file_exists( SLAP_BAG_PER_CATEGORY_PLUGIN_DIR . 'includes/class-slap-bag-fee-manager.php' ) ) {
-            require_once SLAP_BAG_PER_CATEGORY_PLUGIN_DIR . 'includes/class-slap-bag-fee-manager.php';
-        }
-    }
-    
-    // Ensure fee manager is instantiated
-    if ( class_exists( 'SLAP_Bag_Fee_Manager' ) && class_exists( 'WooCommerce' ) ) {
-        // The fee manager should already be instantiated by the main class
-        // but we can add a global instance here for direct access if needed
-        global $slap_fee_manager;
-        if ( ! isset( $slap_fee_manager ) ) {
-            $slap_fee_manager = new SLAP_Bag_Fee_Manager();
-        }
-    }
-}, 20 ); // Priority 20 to ensure WooCommerce is loaded first
+// Fee Manager is initialized inside the core class constructor

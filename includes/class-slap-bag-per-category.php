@@ -142,8 +142,10 @@ class SLAP_Bag_Per_Category {
     private function define_public_hooks() {
         $plugin_public = new SLAP_Bag_Per_Category_Public( $this->get_plugin_name(), $this->get_version() );
 
-        $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
+        $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles', 99 );
         $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+        $this->loader->add_action( 'woocommerce_product_meta_end', $plugin_public, 'render_embalagem_product_meta' );
+        $this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_embalagem_product_meta', 15 );
     }
 
     /**

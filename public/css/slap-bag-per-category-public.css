@@ -8,4 +8,7 @@
  * @author     Pedro Simão <info@slap.pt>
  */
 
-/* Add your public styles here */
+.slap-embalagem span {
+  font-size: 14px;
+  font-weight: bold;
+}

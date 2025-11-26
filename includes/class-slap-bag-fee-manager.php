@@ -17,9 +17,10 @@ class SLAP_Bag_Fee_Manager {
     public function __construct() {
         // Add fees to cart
         add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_category_bag_fees' ), 10, 1 );
+        add_filter( 'woocommerce_get_item_data', array( $this, 'add_embalagem_item_data' ), 10, 2 );
         
         // Add debug info to cart page
-        add_action( 'woocommerce_before_cart', array( $this, 'display_debug_info' ) );
+        //add_action( 'woocommerce_before_cart', array( $this, 'display_debug_info' ) );
     }
 
     /**
@@ -40,81 +41,151 @@ class SLAP_Bag_Fee_Manager {
         }
 
 
-        // Array to track which categories already have fees added
+        // Array to track which categories already processed and total fee
         $categories_with_fees = array();
+        $total_bag_fee = 0;
 
         // Loop through cart items
         foreach ( $cart->get_cart() as $cart_item ) {
             $product_id = $cart_item['product_id'];
-            
-            // Get product categories
             $product_categories = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
 
             if ( ! empty( $product_categories ) && ! is_wp_error( $product_categories ) ) {
-                
                 foreach ( $product_categories as $category_id ) {
-                    // Skip if we already added a fee for this category
                     if ( in_array( $category_id, $categories_with_fees ) ) {
                         continue;
                     }
 
-                    // Get the ACF field value for this category
                     $bag_fee = get_field( 'valor_saco', 'product_cat_' . $category_id );
 
-                    // Check if fee exists and is greater than 0
-                    if ( $bag_fee && is_numeric( $bag_fee ) && floatval( $bag_fee ) > 0 ) {
-                        // Get category name
-                        $category = get_term( $category_id, 'product_cat' );
-                        
-                        if ( $category && ! is_wp_error( $category ) ) {
-                            $fee_name = sprintf( 
-                                __( 'Saco %s', 'slap-bag-per-category' ), 
-                                $category->name 
-                            );
-
-                            // Add the fee to cart
-                            $cart->add_fee( $fee_name, floatval( $bag_fee ), true );
-
-                            // Mark this category as processed
+                    if ( $bag_fee && is_numeric( $bag_fee ) ) {
+                        $fee_value = floatval( $bag_fee );
+                        if ( $fee_value > 0 ) {
+                            $total_bag_fee += $fee_value;
                             $categories_with_fees[] = $category_id;
                         }
                     }
                 }
             }
         }
-    }
 
-    /**
-     * Get all categories with bag fees in the current cart.
-     *
-     * @since    1.0.0
-     * @return   array    Array of category IDs that have bag fees.
-     */
-    public function get_cart_categories_with_fees() {
-        if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
-            return array();
+        if ( $total_bag_fee > 0 ) {
+            $fee_name = __( 'Sacos', 'slap-bag-per-category' );
+            $cart->add_fee( $fee_name, $total_bag_fee, false );
         }
 
-        $categories = array();
+        $processed_products = array();
+        $total_embalagens_fee = 0;
 
-        foreach ( WC()->cart->get_cart() as $cart_item ) {
-            $product_id = $cart_item['product_id'];
-            $product_categories = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
+        foreach ( $cart->get_cart() as $cart_item ) {
+            $product = isset( $cart_item['data'] ) ? $cart_item['data'] : null;
+            $product_id = $product ? $product->get_id() : ( isset( $cart_item['product_id'] ) ? $cart_item['product_id'] : 0 );
 
-            if ( ! empty( $product_categories ) && ! is_wp_error( $product_categories ) ) {
-                foreach ( $product_categories as $category_id ) {
-                    $bag_fee = get_field( 'valor_saco', 'product_cat_' . $category_id );
-                    
-                    if ( $bag_fee && is_numeric( $bag_fee ) && floatval( $bag_fee ) > 0 ) {
-                        if ( ! in_array( $category_id, $categories ) ) {
-                            $categories[] = $category_id;
-                        }
+            if ( ! $product_id ) {
+                continue;
+            }
+
+            $embalagem = function_exists( 'get_field' ) ? get_field( 'embalagem', $product_id ) : null;
+            $dedupe_id = $product_id;
+
+            if ( ( ! $embalagem || $embalagem === '' ) && $product && $product->get_parent_id() ) {
+                $parent_id = $product->get_parent_id();
+                if ( $parent_id ) {
+                    $embalagem_parent = function_exists( 'get_field' ) ? get_field( 'embalagem', $parent_id ) : null;
+                    if ( $embalagem_parent ) {
+                        $embalagem = $embalagem_parent;
+                        $dedupe_id = $parent_id;
                     }
                 }
             }
+
+            if ( in_array( $dedupe_id, $processed_products ) ) {
+                continue;
+            }
+
+            $fee_val = 0;
+            if ( is_array( $embalagem ) ) {
+                foreach ( $embalagem as $val ) {
+                    if ( is_numeric( $val ) ) {
+                        $num = floatval( $val );
+                        if ( $num > 0 ) {
+                            $fee_val += $num;
+                        }
+                    }
+                }
+            } else {
+                if ( is_numeric( $embalagem ) ) {
+                    $num = floatval( $embalagem );
+                    if ( $num > 0 ) {
+                        $fee_val += $num;
+                    }
+                }
+            }
+
+            if ( $fee_val > 0 ) {
+                $total_embalagens_fee += $fee_val;
+                $processed_products[] = $dedupe_id;
+            }
         }
 
-        return $categories;
+        if ( $total_embalagens_fee > 0 ) {
+            $cart->add_fee( __( 'Embalagens', 'slap-bag-per-category' ), $total_embalagens_fee, false );
+        }
+    }
+
+    public function add_embalagem_item_data( $item_data, $cart_item ) {
+        if ( ! function_exists( 'get_field' ) ) {
+            return $item_data;
+        }
+
+        foreach ( $item_data as $existing ) {
+            if ( isset( $existing['name'] ) && $existing['name'] === __( 'Embalagem', 'slap-bag-per-category' ) ) {
+                return $item_data;
+            }
+        }
+
+        $product = isset( $cart_item['data'] ) ? $cart_item['data'] : null;
+        $product_id = $product ? $product->get_id() : ( isset( $cart_item['product_id'] ) ? $cart_item['product_id'] : 0 );
+
+        if ( ! $product_id ) {
+            return $item_data;
+        }
+
+        $embalagem = get_field( 'embalagem', $product_id );
+
+        if ( ( ! $embalagem || $embalagem === '' ) && $product && $product->get_parent_id() ) {
+            $parent_id = $product->get_parent_id();
+            if ( $parent_id ) {
+                $embalagem = get_field( 'embalagem', $parent_id );
+            }
+        }
+
+        if ( $embalagem ) {
+            if ( is_array( $embalagem ) ) {
+                $formatted = array();
+                foreach ( $embalagem as $val ) {
+                    if ( is_numeric( $val ) ) {
+                        $formatted[] = number_format( floatval( $val ), 2, ',', '.' ) . '€';
+                    } else {
+                        $formatted[] = (string) $val;
+                    }
+                }
+                $display_value = implode( ', ', $formatted );
+            } else {
+                if ( is_numeric( $embalagem ) ) {
+                    $display_value = number_format( floatval( $embalagem ), 2, ',', '.' ) . '€';
+                } else {
+                    $display_value = (string) $embalagem;
+                }
+            }
+            $item_data[] = array(
+                'name'  => __( 'Embalagem', 'slap-bag-per-category' ),
+                'value' => wp_kses_post( $display_value ),
+                'display' => wp_kses_post( $display_value ),
+            );
+        }
+
+        return $item_data;
     }
 
     /**
