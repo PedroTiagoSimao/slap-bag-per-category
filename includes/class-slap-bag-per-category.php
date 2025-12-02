@@ -130,6 +130,7 @@ class SLAP_Bag_Per_Category {
 
         $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
         $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+        $this->loader->add_action( 'admin_menu', $plugin_admin, 'register_settings_page' );
     }
 
     /**
@@ -144,8 +145,7 @@ class SLAP_Bag_Per_Category {
 
         $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles', 99 );
         $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-        $this->loader->add_action( 'woocommerce_product_meta_end', $plugin_public, 'render_embalagem_product_meta' );
-        $this->loader->add_action( 'woocommerce_single_product_summary', $plugin_public, 'render_embalagem_product_meta', 15 );
+        // Embalagem info removed from product page
     }
 
     /**

@@ -27,7 +27,6 @@ class SLAP_Bag_Per_Category_Public {
      */
     private $version;
 
-    private $printed_embalagem = false;
 
     /**
      * Initialize the class and set its properties.
@@ -103,58 +102,4 @@ class SLAP_Bag_Per_Category_Public {
         );
     }
 
-    public function render_embalagem_product_meta() {
-        if ( $this->printed_embalagem ) {
-            return;
-        }
-        if ( ! function_exists( 'get_field' ) ) {
-            return;
-        }
-
-        global $product;
-        if ( ! $product ) {
-            return;
-        }
-
-        $product_id = $product->get_id();
-        if ( ! $product_id ) {
-            return;
-        }
-
-        $embalagem = get_field( 'embalagem', $product_id );
-        if ( ! $embalagem && method_exists( $product, 'get_parent_id' ) && $product->get_parent_id() ) {
-            $parent_id = $product->get_parent_id();
-            if ( $parent_id ) {
-                $embalagem = get_field( 'embalagem', $parent_id );
-            }
-        }
-
-        if ( ! $embalagem ) {
-            return;
-        }
-
-        if ( is_array( $embalagem ) ) {
-            $formatted = array();
-            foreach ( $embalagem as $val ) {
-                if ( is_numeric( $val ) ) {
-                    $formatted[] = number_format( floatval( $val ), 2, ',', '.' ) . '€';
-                } else {
-                    $formatted[] = (string) $val;
-                }
-            }
-            $display_value = implode( ', ', $formatted );
-        } else {
-            if ( is_numeric( $embalagem ) ) {
-                $display_value = number_format( floatval( $embalagem ), 2, ',', '.' ) . '€';
-            } else {
-                $display_value = (string) $embalagem;
-            }
-        }
-
-        echo '<div class="slap-embalagem">
-                <span class="slap-embalagem-label">' . esc_html__( 'Embalagem', 'slap-bag-per-category' ) . ':</span>
-                <span class="slap-embalagem-value">' . esc_html( $display_value ) . '</span>
-            </div>';
-        $this->printed_embalagem = true;
-    }
 }

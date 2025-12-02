@@ -8,6 +8,20 @@
  * @author     Pedro Simão <info@slap.pt>
  */
 class SLAP_Bag_Fee_Manager {
+    private function normalize_decimal( $val ) {
+        $s = trim( (string) $val );
+        if ( $s === '' ) {
+            return null;
+        }
+        $s = str_replace( array( '€', ' ' ), '', $s );
+        if ( strpos( $s, ',' ) !== false && strpos( $s, '.' ) !== false ) {
+            $s = str_replace( '.', '', $s );
+            $s = str_replace( ',', '.', $s );
+        } elseif ( strpos( $s, ',' ) !== false ) {
+            $s = str_replace( ',', '.', $s );
+        }
+        return is_numeric( $s ) ? floatval( $s ) : null;
+    }
 
     /**
      * Initialize the class and set up hooks.
@@ -56,14 +70,23 @@ class SLAP_Bag_Fee_Manager {
                         continue;
                     }
 
-                    $bag_fee = get_field( 'valor_saco', 'product_cat_' . $category_id );
-
-                    if ( $bag_fee && is_numeric( $bag_fee ) ) {
-                        $fee_value = floatval( $bag_fee );
-                        if ( $fee_value > 0 ) {
-                            $total_bag_fee += $fee_value;
-                            $categories_with_fees[] = $category_id;
+                    $key = 'product_cat_' . $category_id;
+                    $is_rest = get_field( 'e_restaurante', $key );
+                    if ( ! $is_rest ) {
+                        $is_rest_alt = get_field( 'e_restaurante', 'term_' . $category_id );
+                        if ( ! $is_rest_alt ) {
+                            continue;
                         }
+                    }
+
+                    $bag_fee_raw = get_field( 'valor_saco', $key );
+                    if ( $bag_fee_raw === null || $bag_fee_raw === '' ) {
+                        $bag_fee_raw = get_field( 'valor_saco', 'term_' . $category_id );
+                    }
+                    $fee_value = $this->normalize_decimal( $bag_fee_raw );
+                    if ( $fee_value !== null && $fee_value > 0 ) {
+                        $total_bag_fee += $fee_value;
+                        $categories_with_fees[] = $category_id;
                     }
                 }
             }
@@ -106,16 +129,16 @@ class SLAP_Bag_Fee_Manager {
             $fee_val = 0;
             if ( is_array( $embalagem ) ) {
                 foreach ( $embalagem as $val ) {
-                    if ( is_numeric( $val ) ) {
-                        $num = floatval( $val );
+                    $num = $this->normalize_decimal( $val );
+                    if ( $num !== null ) {
                         if ( $num > 0 ) {
                             $fee_val += $num;
                         }
                     }
                 }
             } else {
-                if ( is_numeric( $embalagem ) ) {
-                    $num = floatval( $embalagem );
+                $num = $this->normalize_decimal( $embalagem );
+                if ( $num !== null ) {
                     if ( $num > 0 ) {
                         $fee_val += $num;
                     }
@@ -164,19 +187,13 @@ class SLAP_Bag_Fee_Manager {
             if ( is_array( $embalagem ) ) {
                 $formatted = array();
                 foreach ( $embalagem as $val ) {
-                    if ( is_numeric( $val ) ) {
-                        $formatted[] = number_format( floatval( $val ), 2, ',', '.' ) . '€';
-                    } else {
-                        $formatted[] = (string) $val;
-                    }
+                    $num = $this->normalize_decimal( $val );
+                    $formatted[] = ( $num !== null ) ? ( number_format( $num, 2, ',', '.' ) . '€' ) : (string) $val;
                 }
                 $display_value = implode( ', ', $formatted );
             } else {
-                if ( is_numeric( $embalagem ) ) {
-                    $display_value = number_format( floatval( $embalagem ), 2, ',', '.' ) . '€';
-                } else {
-                    $display_value = (string) $embalagem;
-                }
+                $num = $this->normalize_decimal( $embalagem );
+                $display_value = ( $num !== null ) ? ( number_format( $num, 2, ',', '.' ) . '€' ) : (string) $embalagem;
             }
             $item_data[] = array(
                 'name'  => __( 'Embalagem', 'slap-bag-per-category' ),
