@@ -3,7 +3,7 @@
  * Plugin Name: SLAP - Sacos e Embalagens
  * Plugin URI: https://slap.pt
  * Description: SLAP - Gestão de sacos e embalagens por restaurante e produto.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Pedro Simão
  * Author URI: https://slap.pt
  * License: GPL v2 or later

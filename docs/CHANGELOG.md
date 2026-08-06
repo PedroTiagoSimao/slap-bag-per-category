@@ -2,9 +2,16 @@
 
 All notable changes to the SLAP - Saco por restaurante plugin will be documented in this file.
 
+## [1.0.1] - 2026-08-06
+
+### Fixed
+
+- Fixed a bug where the plugin was not calculating the correct fee when product quantity was greater than 1.
+
 ## [1.0.0] - 2025-11-26
 
 ### Added
+
 - Initial plugin release
 - WordPress plugin boilerplate structure
 - ACF integration for category-based bag fees
@@ -17,6 +24,7 @@ All notable changes to the SLAP - Saco por restaurante plugin will be documented
 - Comprehensive documentation (README.md and ACF-SETUP-GUIDE.md)
 
 ### Features
+
 - One fee per category regardless of product quantity
 - Automatic fee naming: "Saco [Category Name]"
 - Clean, object-oriented architecture
@@ -24,6 +32,7 @@ All notable changes to the SLAP - Saco por restaurante plugin will be documented
 - Easy to extend and customize
 
 ### Requirements
+
 - WordPress 5.8+
 - PHP 7.4+
 - WooCommerce (required)

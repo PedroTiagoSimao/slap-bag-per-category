@@ -80,7 +80,12 @@ slap-bag-per-category/
 ## Changelog
 
 ### 1.0.0
+
 - Initial release
+
+### 1.0.1
+
+- Fixed a bug where the plugin was not calculating the correct fee when product quantity was greater than 1.
 
 ## Support
 

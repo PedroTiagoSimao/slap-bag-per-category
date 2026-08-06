@@ -108,6 +108,9 @@ class SLAP_Bag_Fee_Manager {
                 continue;
             }
 
+            // Get item quantity from WooCommerce cart
+            $quantity = isset( $cart_item['quantity'] ) ? (int) $cart_item['quantity'] : 1;
+
             $embalagem = function_exists( 'get_field' ) ? get_field( 'embalagem', $product_id ) : null;
             $dedupe_id = $product_id;
 
@@ -146,7 +149,7 @@ class SLAP_Bag_Fee_Manager {
             }
 
             if ( $fee_val > 0 ) {
-                $total_embalagens_fee += $fee_val;
+                $total_embalagens_fee += ( $quantity * $fee_val );
                 $processed_products[] = $dedupe_id;
             }
         }
