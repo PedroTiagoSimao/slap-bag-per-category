@@ -87,6 +87,10 @@ slap-bag-per-category/
 
 - Fixed a bug where the plugin was not calculating the correct fee when product quantity was greater than 1.
 
+### 1.0.2
+
+- Fixed `Embalagens` fee calculation so different variations of the same product are summed separately in the cart and checkout.
+
 ## Support
 
 For support, please visit [https://slap.pt](https://slap.pt)
