@@ -2,6 +2,12 @@
 
 All notable changes to the SLAP - Saco por restaurante plugin will be documented in this file.
 
+## [1.0.2] - 2026-09-24
+
+### Fixed
+
+- Fixed `Embalagens` fee calculation so different variations of the same product are summed separately in the cart and checkout.
+
 ## [1.0.1] - 2026-08-06
 
 ### Fixed

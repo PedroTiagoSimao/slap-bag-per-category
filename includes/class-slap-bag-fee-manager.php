@@ -103,6 +103,7 @@ class SLAP_Bag_Fee_Manager {
         foreach ( $cart->get_cart() as $cart_item ) {
             $product = isset( $cart_item['data'] ) ? $cart_item['data'] : null;
             $product_id = $product ? $product->get_id() : ( isset( $cart_item['product_id'] ) ? $cart_item['product_id'] : 0 );
+            $variation_id = isset( $cart_item['variation_id'] ) ? intval( $cart_item['variation_id'] ) : 0;
 
             if ( ! $product_id ) {
                 continue;
@@ -112,7 +113,7 @@ class SLAP_Bag_Fee_Manager {
             $quantity = isset( $cart_item['quantity'] ) ? (int) $cart_item['quantity'] : 1;
 
             $embalagem = function_exists( 'get_field' ) ? get_field( 'embalagem', $product_id ) : null;
-            $dedupe_id = $product_id;
+            $dedupe_id = $variation_id ? $variation_id : $product_id;
 
             if ( ( ! $embalagem || $embalagem === '' ) && $product && $product->get_parent_id() ) {
                 $parent_id = $product->get_parent_id();
@@ -120,7 +121,7 @@ class SLAP_Bag_Fee_Manager {
                     $embalagem_parent = function_exists( 'get_field' ) ? get_field( 'embalagem', $parent_id ) : null;
                     if ( $embalagem_parent ) {
                         $embalagem = $embalagem_parent;
-                        $dedupe_id = $parent_id;
+                        $dedupe_id = $variation_id ? $variation_id : $product_id;
                     }
                 }
             }

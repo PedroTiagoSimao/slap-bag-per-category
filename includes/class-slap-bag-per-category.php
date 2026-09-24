@@ -49,7 +49,7 @@ class SLAP_Bag_Per_Category {
         if ( defined( 'SLAP_BAG_PER_CATEGORY_VERSION' ) ) {
             $this->version = SLAP_BAG_PER_CATEGORY_VERSION;
         } else {
-            $this->version = '1.0.0';
+            $this->version = '1.0.2';
         }
         $this->plugin_name = 'slap-bag-per-category';
 
